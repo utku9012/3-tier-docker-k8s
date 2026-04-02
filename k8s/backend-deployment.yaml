@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        image: docker.io/library/my-backend:v4
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "64Mi"   # Minimum ihtiyaç duyulan RAM
+            cpu: "100m"      # Minimum ihtiyaç duyulan CPU (0.1 Core)
+          limits:
+            memory: "128Mi"  # Maksimum çıkabileceği RAM sınırı
+            cpu: "200m"      # Maksimum çıkabileceği CPU sınırı
+        livenessProbe:
+          httpGet:
+            path: /todos     # Bu adrese istek atarak kontrol eder
+            port: 3000
+          initialDelaySeconds: 15 # Uygulama açıldıktan sonra 15 sn bekle
+          periodSeconds: 20       # Her 20 saniyede bir kontrol et
+        readinessProbe:
+          httpGet:
+            path: /todos
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        env:
+        - name: DB_USER
+          value: "postgres"      # Postgres imajının default kullanıcısı
+        - name: DB_PASSWORD
+          value: "12345"         # DB Deployment'takiyle aynı olmalı
+        - name: DB_NAME
+          value: "todos_db"      # DB Deployment'taki POSTGRES_DB ile aynı
+        - name: DB_HOST
+          value: "db-service"    # kubectl get svc yazdığında gördüğün DB servis adı
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000
