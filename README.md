@@ -1,15 +1,16 @@
 # 3-Tier To-Do Application
 
-3 katmanlı To-Do uygulama mimarinin AWS bulut altyapısı ( EC2 ) üzerinde Kubernetes ile yayına alınmasını kapsayan bir projem. 
+3 katmanlı To-Do uygulama, mimarisi AWS bulut altyapısı ( EC2 ) üzerinde Kubernetes ile yayına alınmasını kapsayan bir projem. 
 
 
-Uygulamanın her katmanını Docker kullanılarak izole ettim. Frontend tarafında "Multi-stage Build" kullanılarak imaj boyutu optimize edilmiş ve statik dosyalar Nginx ile sunulmuştur. Backend ise Node.js Alpine imajı üzerine inşa edilmiştir. Podlar silindiğinde veri kaybı yaşanmaması için PersistentVolumeClaim (PVC) kullanılmıştır. PostgreSQL verileri, AWS EBS veya yerel disk üzerinde güvenli bir şekilde saklanır. Backend, veritabanına Kubernetes iç ağındaki db-service ismi üzerinden ulaşır. Dış dünya ile iletişim ise NodePort servisleri aracılığıyla sağlanır.
+Uygulamanın her katmanını Docker kullanılarak izole ettim. Frontend tarafında "Multi-stage Build" kullanılarak image boyutunu azalttım. Backend tarafında daha stail bir sürüm olduğu için node:18-alpine image'ini kullandım. Podlar silindiğinde veri kaybı yaşanmaması için PersistentVolumeClaim (PVC) ekledim. PostgreSQL verileri, Oluşturduğum AWS EC2 üzerinde saklanıyor. Backend, veritabanına Kubernetes iç ağındaki db-service ismi üzerinden ulaşıyor dış dünyaya olan servisi ise EC2 Security Group üzerinden CUSTOM TPC tanımlayarak 0.0.0.0/0 üzerinden açtım. Her mikroservis için kaynak yönetimi ekledim ve Liveness,Readiness probelarını manifestolara ekledim. Grafana üzerinden de kaynak tüketimi ve podların durumu monitoring ediliyor.
 
 
-Kurulum Talimatları
+# Kurulum Talimatları:
+
 Repo'yu Klonlayın: git clone <repo-url>
 
-İmajları Build Edin:
+İmageları Build Edin:
 
 Bash
 docker build -t my-backend:v4 ./backend
@@ -28,4 +29,4 @@ Frontend UI: http://<AWS-IP>:30080
 
 API Health: http://<AWS-IP>:30000/todos
 
-Monitoring: http://<AWS-IP>:31000
+Grafana Monitoring: http://<AWS-IP>:31000
